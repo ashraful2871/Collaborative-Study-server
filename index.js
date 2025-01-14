@@ -8,9 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//study-platform
-//5BGSCQXLRsEdM5R9
-
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const uri = `mongodb+srv://${process.env.USER_DB}:${process.env.USER_PASS}@cluster0.jq7qb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -27,6 +24,23 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
+
+    const db = client.db("StudyDB");
+    const createStudySessionCollection = db.collection("create-study-session");
+
+    //save create study in db
+    app.post("/create-study", async (req, res) => {
+      const createData = req.body;
+      const result = await createStudySessionCollection.insertOne(createData);
+      res.send(result);
+    });
+
+    //get all create data
+    app.get("/create-all-study", async (req, res) => {
+      const result = await createStudySessionCollection.find().toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
