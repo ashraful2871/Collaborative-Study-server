@@ -66,11 +66,17 @@ async function run() {
       res.send(result);
     });
 
-    //get all create data
+    //get all create data by specific user
     app.get("/create-all-study/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { "tutor.email": email };
       const result = await createStudySessionCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    //get all study session
+    app.get("/all-study-session", verifyToken, async (req, res) => {
+      const result = await createStudySessionCollection.find().toArray();
       res.send(result);
     });
 
