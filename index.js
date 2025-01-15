@@ -121,7 +121,11 @@ async function run() {
 
     //get all users
     app.get("/users", verifyToken, async (req, res) => {
-      const result = await userCollection.find().toArray();
+      const search = req.query.search;
+
+      //search by email in inputField
+      let query = { email: { $regex: search, $options: "i" } };
+      const result = await userCollection.find(query).toArray();
       res.send(result);
     });
 
