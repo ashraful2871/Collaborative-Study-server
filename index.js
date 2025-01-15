@@ -87,8 +87,8 @@ async function run() {
       res.send(result);
     });
 
-    //get all material data
-    app.get("/all-materials/:email", async (req, res) => {
+    //get all material data for specific user
+    app.get("/all-materials/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = {
         tutorEmail: email,
@@ -97,8 +97,16 @@ async function run() {
       res.send(result);
     });
 
-    //delete material
+    //delete tutor material
     app.delete("/delete-material/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await materialCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //delete admin material
+    app.delete("/delete-admin-material/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await materialCollection.deleteOne(query);
@@ -184,6 +192,11 @@ async function run() {
       res.send(result);
     });
 
+    //get all material data for admin
+    app.get("/all-materials", verifyToken, async (req, res) => {
+      const result = await materialCollection.find().toArray();
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
