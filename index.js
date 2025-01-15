@@ -204,6 +204,16 @@ async function run() {
       const result = await materialCollection.find().toArray();
       res.send(result);
     });
+
+    //get single data for a session
+    app.get("/session-details/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await createStudySessionCollection.findOne(query);
+
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
