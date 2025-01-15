@@ -80,6 +80,13 @@ async function run() {
       res.send(result);
     });
 
+    //get all approved study session
+    app.get("/all-approved-study-session", verifyToken, async (req, res) => {
+      const query = { status: "Approved" };
+      const result = await createStudySessionCollection.find(query).toArray();
+      res.send(result);
+    });
+
     //save material in db
     app.post("/upload-material", verifyToken, async (req, res) => {
       const materialData = req.body;
