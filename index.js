@@ -287,8 +287,6 @@ async function run() {
 
     //get session material that student booked
     app.get("/session-materials/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-
       try {
         const studentEmail = req.params.email;
 
@@ -296,14 +294,11 @@ async function run() {
           return res.status(400).json({ error: "Student email is required" });
         }
 
-        // Aggregate pipeline to join bookings and materials
         const materials = await db
           .collection("booking")
           .aggregate([
-            // Match bookings for the student
             { $match: { studentEmail } },
 
-            // Lookup matching materials based on sessionId
             {
               $lookup: {
                 from: "material",
@@ -313,16 +308,15 @@ async function run() {
               },
             },
 
-            // Unwind the materials array to flatten the result
             { $unwind: "$materials" },
 
-            // Project only the necessary fields
             {
               $project: {
                 _id: 0,
+                bookingImage: "$image",
                 sessionTitle: "$materials.sessionTitle",
                 materialId: "$materials.materialId",
-                image: "$materials.image",
+                materialImage: "$materials.image",
                 driveLink: "$materials.driveLink",
                 tutorEmail: "$materials.tutorEmail",
               },
