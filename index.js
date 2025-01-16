@@ -81,7 +81,7 @@ async function run() {
     });
 
     //get all approved study session
-    app.get("/all-approved-study-session", verifyToken, async (req, res) => {
+    app.get("/all-approved-study-session", async (req, res) => {
       const query = { status: "Approved" };
       const result = await createStudySessionCollection.find(query).toArray();
       res.send(result);
