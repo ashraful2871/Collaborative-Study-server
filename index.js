@@ -278,6 +278,64 @@ async function run() {
       res.send(result);
     });
 
+    //get session material that student booked
+    app.get("/session-materials/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+      try {
+        const studentEmail = req.params.email;
+
+        if (!studentEmail) {
+          return res.status(400).json({ error: "Student email is required" });
+        }
+
+        // Aggregate pipeline to join bookings and materials
+        const materials = await db
+          .collection("booking")
+          .aggregate([
+            // Match bookings for the student
+            { $match: { studentEmail } },
+
+            // Lookup matching materials based on sessionId
+            {
+              $lookup: {
+                from: "material",
+                localField: "sessionId",
+                foreignField: "materialId",
+                as: "materials",
+              },
+            },
+
+            // Unwind the materials array to flatten the result
+            { $unwind: "$materials" },
+
+            // Project only the necessary fields
+            {
+              $project: {
+                _id: 0,
+                sessionTitle: "$materials.sessionTitle",
+                materialId: "$materials.materialId",
+                image: "$materials.image",
+                driveLink: "$materials.driveLink",
+                tutorEmail: "$materials.tutorEmail",
+              },
+            },
+          ])
+          .toArray();
+
+        if (!materials.length) {
+          return res
+            .status(404)
+            .json({ message: "No materials found for the booked sessions." });
+        }
+
+        res.status(200).json(materials);
+      } catch (error) {
+        console.error("Error fetching materials:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
