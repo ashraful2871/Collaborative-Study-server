@@ -40,7 +40,7 @@ async function run() {
         return res.status(400).send({ message: "Email is required" });
       }
       const token = jwt.sign({ email }, process.env.TOKEN_SECRET_KEY, {
-        expiresIn: "1h",
+        expiresIn: "365d",
       }); // Set token expiry
       res.send({ token });
     });
@@ -259,6 +259,14 @@ async function run() {
     app.post("/book-session", verifyToken, async (req, res) => {
       const bookedData = req.body;
       const result = await bookedSessionCollection.insertOne(bookedData);
+      res.send(result);
+    });
+
+    //get specific student booked session data
+    app.get("/book-session/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { studentEmail: email };
+      const result = await bookedSessionCollection.find(query).toArray();
       res.send(result);
     });
 
