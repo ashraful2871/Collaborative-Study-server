@@ -152,6 +152,13 @@ async function run() {
       res.send(result);
     });
 
+    //user role management
+    app.get("/user/role/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await userCollection.findOne({ email });
+      res.send({ role: result?.role });
+    });
+
     //update user role
     app.patch("/user/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
