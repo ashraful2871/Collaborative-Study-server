@@ -239,6 +239,21 @@ async function run() {
       res.send(result);
     });
 
+    //update note
+    app.patch("/update/note/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const { title, description } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          title: title,
+          description: description,
+        },
+      };
+      const result = await noteCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
