@@ -30,6 +30,7 @@ async function run() {
     const createStudySessionCollection = db.collection("create-study-session");
     const materialCollection = db.collection("material");
     const userCollection = db.collection("users");
+    const noteCollection = db.collection("notes");
 
     // Generate JWT
     app.post("/jwt", (req, res) => {
@@ -211,6 +212,13 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await createStudySessionCollection.findOne(query);
 
+      res.send(result);
+    });
+
+    //create note and save in to db
+    app.post("/crete-note", verifyToken, async (req, res) => {
+      const note = req.body;
+      const result = await noteCollection.insertOne(note);
       res.send(result);
     });
 
