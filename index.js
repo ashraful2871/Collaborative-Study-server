@@ -31,6 +31,7 @@ async function run() {
     const materialCollection = db.collection("material");
     const userCollection = db.collection("users");
     const noteCollection = db.collection("notes");
+    const bookedSessionCollection = db.collection("booking");
 
     // Generate JWT
     app.post("/jwt", (req, res) => {
@@ -251,6 +252,13 @@ async function run() {
         },
       };
       const result = await noteCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    //booked student session data save in db
+    app.post("/book-session", verifyToken, async (req, res) => {
+      const bookedData = req.body;
+      const result = await bookedSessionCollection.insertOne(bookedData);
       res.send(result);
     });
 
