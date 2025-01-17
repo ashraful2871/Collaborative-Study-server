@@ -115,7 +115,7 @@ async function run() {
       res.send(result);
     });
 
-    //delete admin material
+    //delete admin material // admin verify
     app.delete("/delete-admin-material/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -143,7 +143,7 @@ async function run() {
       res.send(result);
     });
 
-    //get all users
+    //get all users //admin verify
     app.get("/users", verifyToken, async (req, res) => {
       const search = req.query.search;
 
@@ -160,7 +160,7 @@ async function run() {
       res.send({ role: result?.role });
     });
 
-    //update user role
+    //update user role // admin verify
     app.patch("/user/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const { role } = req.body;
@@ -174,20 +174,30 @@ async function run() {
       res.send(result);
     });
 
-    //change status
+    //change status  //and verify admin
     app.patch("/change-status/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-      const { status } = req.body;
+      const { status, reason, feedback } = req.body;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
           status: status,
+          reason: reason,
+          feedback: feedback,
         },
       };
       const result = await createStudySessionCollection.updateOne(
         filter,
         updatedDoc
       );
+      res.send(result);
+    });
+
+    //delete approved session by admin
+    app.delete("/delete/admin/session/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await createStudySessionCollection.deleteOne(query);
       res.send(result);
     });
 
