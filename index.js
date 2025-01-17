@@ -32,6 +32,7 @@ async function run() {
     const userCollection = db.collection("users");
     const noteCollection = db.collection("notes");
     const bookedSessionCollection = db.collection("booking");
+    const reviewCollection = db.collection("reviews");
 
     // Generate JWT
     app.post("/jwt", (req, res) => {
@@ -335,6 +336,13 @@ async function run() {
         console.error("Error fetching materials:", error);
         res.status(500).json({ error: "Internal server error" });
       }
+    });
+
+    //save review in db
+    app.post("/reviews", verifyToken, async (req, res) => {
+      const reviewData = req.body;
+      const result = await reviewCollection.insertOne(reviewData);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
