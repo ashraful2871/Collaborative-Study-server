@@ -219,7 +219,29 @@ async function run() {
     app.get("/session-details/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await createStudySessionCollection.findOne(query);
+      const result = await createStudySessionCollection
+        .aggregate([
+          {
+            $match: { _id: new ObjectId(id) },
+          },
+          {
+            $lookup: {
+              from: "reviews",
+              let: { sessionId: { $toString: "$_id" } },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$sessionId", "$$sessionId"],
+                    },
+                  },
+                },
+              ],
+              as: "reviews",
+            },
+          },
+        ])
+        .next();
 
       res.send(result);
     });
