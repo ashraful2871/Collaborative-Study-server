@@ -190,6 +190,27 @@ async function run() {
       res.send(result);
     });
 
+    // send request admin // verify by tutor
+    app.patch(
+      "/change-study-status/tutor/:id",
+      verifyToken,
+      async (req, res) => {
+        const id = req.params.id;
+        const { status } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            status: status,
+          },
+        };
+        const result = await createStudySessionCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
+
     //delete approved session by admin
     app.delete("/delete/admin/session/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
