@@ -83,9 +83,27 @@ async function run() {
 
     //get all approved study session
     app.get("/all-approved-study-session", async (req, res) => {
+      const { page = 1, limit = 6 } = req.query;
+      const skip = (page - 1) * limit;
+
       const query = { status: "Approved" };
-      const result = await createStudySessionCollection.find(query).toArray();
-      res.send(result);
+
+      const totalItems = await createStudySessionCollection.countDocuments(
+        query
+      );
+
+      const studySessions = await createStudySessionCollection
+        .find(query)
+        .skip(skip)
+        .limit(Number(limit))
+        .toArray();
+
+      res.json({
+        studySessions,
+        totalItems,
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalItems / limit),
+      });
     });
 
     //save material in db
