@@ -60,26 +60,74 @@ async function run() {
       });
     };
 
+    //verifyAdmin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.user?.email;
+      if (!email) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
+
+      const query = { email };
+      const user = await userCollection.findOne(query);
+
+      if (!user || user.role !== "admin") {
+        return res
+          .status(403)
+          .json({ message: "Forbidden:Only Admin Can access" });
+      }
+
+      next();
+    };
+
+    //verifyAdmin
+    const verifyTutor = async (req, res, next) => {
+      const email = req.user?.email;
+      if (!email) {
+        return res.status(401).json({ message: "Unauthorized access" });
+      }
+
+      const query = { email };
+      const user = await userCollection.findOne(query);
+
+      if (!user || user.role !== "tutor") {
+        return res
+          .status(403)
+          .json({ message: "Forbidden:Only Tutor Can access" });
+      }
+
+      next();
+    };
+
     //save create study in db
-    app.post("/create-study", verifyToken, async (req, res) => {
+    app.post("/create-study", verifyToken, verifyTutor, async (req, res) => {
       const createData = req.body;
       const result = await createStudySessionCollection.insertOne(createData);
       res.send(result);
     });
 
     //get all create data by specific user
-    app.get("/create-all-study/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const query = { "tutor.email": email };
-      const result = await createStudySessionCollection.find(query).toArray();
-      res.send(result);
-    });
+    app.get(
+      "/create-all-study/:email",
+      verifyToken,
+      verifyTutor,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = { "tutor.email": email };
+        const result = await createStudySessionCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     //get all study session
-    app.get("/all-study-session", verifyToken, async (req, res) => {
-      const result = await createStudySessionCollection.find().toArray();
-      res.send(result);
-    });
+    app.get(
+      "/all-study-session",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const result = await createStudySessionCollection.find().toArray();
+        res.send(result);
+      }
+    );
 
     //get all approved study session
     app.get("/all-approved-study-session", async (req, res) => {
@@ -107,37 +155,52 @@ async function run() {
     });
 
     //save material in db
-    app.post("/upload-material", verifyToken, async (req, res) => {
+    app.post("/upload-material", verifyToken, verifyTutor, async (req, res) => {
       const materialData = req.body;
       const result = await materialCollection.insertOne(materialData);
       res.send(result);
     });
 
     //get all material data for specific user
-    app.get("/all-materials/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const query = {
-        tutorEmail: email,
-      };
-      const result = await materialCollection.find(query).toArray();
-      res.send(result);
-    });
+    app.get(
+      "/all-materials/:email",
+      verifyToken,
+      verifyTutor,
+      async (req, res) => {
+        const email = req.params.email;
+        const query = {
+          tutorEmail: email,
+        };
+        const result = await materialCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     //delete tutor material
-    app.delete("/delete-material/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await materialCollection.deleteOne(query);
-      res.send(result);
-    });
+    app.delete(
+      "/delete-material/:id",
+      verifyToken,
+      verifyTutor,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await materialCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     //delete admin material // admin verify
-    app.delete("/delete-admin-material/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await materialCollection.deleteOne(query);
-      res.send(result);
-    });
+    app.delete(
+      "/delete-admin-material/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await materialCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     //save user in db
     app.post("/users", async (req, res) => {
@@ -160,7 +223,7 @@ async function run() {
     });
 
     //get all users //admin verify
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const search = req.query.search;
 
       //search by email in inputField
@@ -170,49 +233,60 @@ async function run() {
     });
 
     //user role management
-    app.get("/user/role/:email", async (req, res) => {
+    app.get("/user/role/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       const result = await userCollection.findOne({ email });
       res.send({ role: result?.role });
     });
 
     //update user role // admin verify
-    app.patch("/user/role/:email", verifyToken, async (req, res) => {
-      const email = req.params.email;
-      const { role } = req.body;
-      const filter = { email };
-      const updatedDoc = {
-        $set: {
-          role: role,
-        },
-      };
-      const result = await userCollection.updateOne(filter, updatedDoc);
-      res.send(result);
-    });
+    app.patch(
+      "/user/role/:email",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
+        const { role } = req.body;
+        const filter = { email };
+        const updatedDoc = {
+          $set: {
+            role: role,
+          },
+        };
+        const result = await userCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
 
     //change status  //and verify admin
-    app.patch("/change-status/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const { status, reason, feedback } = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          status: status,
-          reason: reason,
-          feedback: feedback,
-        },
-      };
-      const result = await createStudySessionCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-      res.send(result);
-    });
+    app.patch(
+      "/change-status/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { status, reason, feedback } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            status: status,
+            reason: reason,
+            feedback: feedback,
+          },
+        };
+        const result = await createStudySessionCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
 
     // send request admin // verify by tutor
     app.patch(
       "/change-study-status/tutor/:id",
       verifyToken,
+      verifyTutor,
       async (req, res) => {
         const id = req.params.id;
         const { status } = req.body;
@@ -231,33 +305,43 @@ async function run() {
     );
 
     //delete approved session by admin
-    app.delete("/delete/admin/session/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await createStudySessionCollection.deleteOne(query);
-      res.send(result);
-    });
+    app.delete(
+      "/delete/admin/session/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await createStudySessionCollection.deleteOne(query);
+        res.send(result);
+      }
+    );
 
     //add session fee
-    app.patch("/approve-session/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const { amount, status } = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          registrationFee: amount,
-          status: status,
-        },
-      };
-      const result = await createStudySessionCollection.updateOne(
-        filter,
-        updatedDoc
-      );
-      res.send(result);
-    });
+    app.patch(
+      "/approve-session/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { amount, status } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            registrationFee: amount,
+            status: status,
+          },
+        };
+        const result = await createStudySessionCollection.updateOne(
+          filter,
+          updatedDoc
+        );
+        res.send(result);
+      }
+    );
 
     //get all material data for admin
-    app.get("/all-materials", verifyToken, async (req, res) => {
+    app.get("/all-materials", verifyToken, verifyAdmin, async (req, res) => {
       const result = await materialCollection.find().toArray();
       res.send(result);
     });
@@ -436,16 +520,21 @@ async function run() {
     });
 
     //update material
-    app.put("/update-material/:id", verifyToken, async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const updateMaterialData = req.body;
-      const updatedDoc = {
-        $set: updateMaterialData,
-      };
-      const result = await materialCollection.updateOne(filter, updatedDoc);
-      res.send(result);
-    });
+    app.put(
+      "/update-material/:id",
+      verifyToken,
+      verifyTutor,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateMaterialData = req.body;
+        const updatedDoc = {
+          $set: updateMaterialData,
+        };
+        const result = await materialCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
