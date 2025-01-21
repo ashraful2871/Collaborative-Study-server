@@ -409,6 +409,13 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
+
+    //all tutor
+    app.get("/tutors", async (req, res) => {
+      const query = { role: "tutor" };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
