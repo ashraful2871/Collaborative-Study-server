@@ -535,6 +535,22 @@ async function run() {
         res.send(result);
       }
     );
+    //update material by admin
+    app.put(
+      "/update-material/admin/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateMaterialData = req.body;
+        const updatedDoc = {
+          $set: updateMaterialData,
+        };
+        const result = await materialCollection.updateOne(filter, updatedDoc);
+        res.send(result);
+      }
+    );
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     // console.log(
