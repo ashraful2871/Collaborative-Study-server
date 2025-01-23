@@ -222,14 +222,25 @@ async function run() {
       res.send(result);
     });
 
-    //get all users //admin verify
+    //get all users ///admin verify
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
-      const search = req.query.search;
+      const search = req.query.search || "";
+      const page = parseInt(req.query.page) || 1;
+      const limit = 10;
 
-      //search by email in inputField
-      let query = { email: { $regex: search, $options: "i" } };
-      const result = await userCollection.find(query).toArray();
-      res.send(result);
+      const query = { email: { $regex: search, $options: "i" } };
+
+      const totalUsers = await userCollection.countDocuments(query);
+      const users = await userCollection
+        .find(query)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .toArray();
+
+      res.send({
+        users,
+        totalUsers,
+      });
     });
 
     //user role management
