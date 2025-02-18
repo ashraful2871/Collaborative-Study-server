@@ -31,6 +31,7 @@ async function run() {
     const noteCollection = db.collection("notes");
     const bookedSessionCollection = db.collection("booking");
     const reviewCollection = db.collection("reviews");
+    const userReviewCollection = db.collection("userReviews");
 
     // Generate JWT
     app.post("/jwt", (req, res) => {
@@ -131,27 +132,14 @@ async function run() {
 
     //get all approved study session
     app.get("/all-approved-study-session", async (req, res) => {
-      const { page = 1, limit = 6 } = req.query;
-      const skip = (page - 1) * limit;
-
       const query = { status: "Approved" };
-
-      const totalItems = await createStudySessionCollection.countDocuments(
-        query
-      );
 
       const studySessions = await createStudySessionCollection
         .find(query)
-        .skip(skip)
-        .limit(Number(limit))
+
         .toArray();
 
-      res.json({
-        studySessions,
-        totalItems,
-        currentPage: Number(page),
-        totalPages: Math.ceil(totalItems / limit),
-      });
+      res.send(studySessions);
     });
 
     //save material in db
@@ -392,6 +380,12 @@ async function run() {
     app.post("/crete-note", verifyToken, async (req, res) => {
       const note = req.body;
       const result = await noteCollection.insertOne(note);
+      res.send(result);
+    });
+    //create note and save in to db
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await userReviewCollection.insertOne(review);
       res.send(result);
     });
 
