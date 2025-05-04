@@ -13,7 +13,6 @@ app.use(express.json());
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.USER_DB}:${process.env.USER_PASS}@cluster0.jq7qb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -41,7 +40,7 @@ async function run() {
       }
       const token = jwt.sign({ email }, process.env.TOKEN_SECRET_KEY, {
         expiresIn: "365d",
-      }); // Set token expiry
+      });
       res.send({ token });
     });
 
@@ -557,7 +556,6 @@ async function run() {
       }
     );
   } finally {
-    // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
